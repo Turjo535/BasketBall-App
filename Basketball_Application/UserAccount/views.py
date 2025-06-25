@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,OTPVerificationSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
@@ -50,3 +50,16 @@ class UserLoginView(APIView):
             else:
                 return Response({"Error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class EmailValidationView(APIView):
+    def post(self, request):
+        serializer = EmailValidationSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+                return Response({"message": "Email is valid."}, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response({"error": "Email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
