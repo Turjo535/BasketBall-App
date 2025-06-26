@@ -67,8 +67,12 @@ class EmailValidationSerializer(serializers.Serializer):
             secret = pyotp.random_base32()
             totp = pyotp.TOTP(secret, interval=300) # 5 minutes validity
             otp = totp.now()
-
-            #email sending logic would go here
+            # Store the OTP secret and send the OTP to the user
+            print(user)
+            user.otp_secret = otp
+            user.otp_send_time = timezone.now()
+            user.save()   
+            
             Util.send_email({
                 'subject': 'Password Reset',
                 'body': f'Your OTP is: {otp}',
@@ -76,5 +80,28 @@ class EmailValidationSerializer(serializers.Serializer):
             })
         return value
 
+# CHANGED: Added comments and improved OTP secret handling (should be stored/retrieved, not regenerated)
+class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
 
+    class Meta:
+        fields = ['email', 'otp']
 
+    def validate(self, attrs):
+        email = attrs.get('email')
+        otp = attrs.get('otp')
+        if not User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("This email is not registered.")
+
+        user = User.objects.get(email=email)
+
+        # Retrieve the OTP secret stored for the user (should be set when sending OTP)
+        
+        
+        if (timezone.now() - user.otp_send_time) > timedelta(minutes=5):
+            raise serializers.ValidationError("OTP has expired. Please request a new one.")
+        elif user.otp_secret!=otp:
+            raise serializers.ValidationError("OTP secret not found for this user.")
+
+        return attrs

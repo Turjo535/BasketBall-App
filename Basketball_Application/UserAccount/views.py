@@ -4,11 +4,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,OTPVerificationSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,VerifyOTPSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from datetime import datetime, timedelta
+
 
 def get_tokens_for_user(user):
     if not user.is_active:
@@ -53,7 +56,9 @@ class UserLoginView(APIView):
     
 class EmailValidationView(APIView):
     def post(self, request):
+        
         serializer = EmailValidationSerializer(data=request.data)
+        
         if serializer.is_valid():
             email = serializer.validated_data['email']
             try:
@@ -62,4 +67,22 @@ class EmailValidationView(APIView):
             except User.DoesNotExist:
                 return Response({"error": "Email does not exist."}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyOTPView(APIView):
+    
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user= User.objects.filter(email=email).first()
+
+            user.otp_secret = None
+            user.otp_send_time = None
+            user.is_active = True
+            user.save()
+            return Response({"message": "OTP verified successfully. Account is activated."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 

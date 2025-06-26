@@ -12,3 +12,4 @@ class Util:
         )
         email.content_subtype = 'html'  # If you want to send HTML content
         email.send()
+

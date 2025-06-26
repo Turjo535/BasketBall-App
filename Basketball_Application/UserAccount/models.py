@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.conf import settings
 
 class UserManager(BaseUserManager):
     def create_user(self,name, email,phone,  role, password=None):
@@ -39,9 +40,11 @@ class User(AbstractBaseUser):
     ]
     name       = models.CharField(max_length=255, unique=True)
     email      = models.EmailField(verbose_name="email address", max_length=255, unique=True)
-    phone      = models.CharField(max_length=20, unique=True)
+    phone      = models.CharField(max_length=20)
     role       = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    is_active  = models.BooleanField(default=True)
+    is_active  = models.BooleanField(default=False)
+    otp_secret = models.CharField(max_length=32, blank=True, null=True)
+    otp_send_time = models.DateTimeField(blank=True, null=True)
     is_admin   = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -49,7 +52,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD  = 'name'
-    REQUIRED_FIELDS = ['email', 'phone',]
+    REQUIRED_FIELDS = ['email',]
 
     def __str__(self):
         return f"{self.email} ({self.get_role_display()})"
@@ -63,3 +66,4 @@ class User(AbstractBaseUser):
     @property
     def is_staff(self):
         return self.is_admin
+
