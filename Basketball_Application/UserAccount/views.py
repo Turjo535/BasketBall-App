@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,VerifyOTPSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,VerifyOTPSerializer,UserChangePasswordSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
@@ -83,6 +83,16 @@ class VerifyOTPView(APIView):
             return Response({"message": "OTP verified successfully. Account is activated."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        
+        serializer = UserChangePasswordSerializer(data=request.data, context={'user':request.user})
+        #print(serializer.data)
+        serializer.is_valid(raise_exception=True)
+        return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
 
 
 

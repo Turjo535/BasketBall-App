@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 User = get_user_model()
 
@@ -105,3 +108,27 @@ class VerifyOTPSerializer(serializers.Serializer):
             raise serializers.ValidationError("OTP secret not found for this user.")
 
         return attrs
+
+
+class UserChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
+    password = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
+    password2 = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
+
+    class Meta:
+        fields = ['current_password', 'password', 'password2']
+
+    def validate(self, attrs):
+        current_password = attrs.get('current_password')
+        password = attrs.get('password')
+        
+        password2 = attrs.get('password2')
+        user = self.context.get('user')
+        if not self.context.get('user').check_password(current_password):
+            raise serializers.ValidationError("Current password is incorrect")
+        elif password != password2:
+            raise serializers.ValidationError("Password and Confirm Password doesn't match")
+        user.set_password(password)
+        user.save()
+        return attrs   
+
