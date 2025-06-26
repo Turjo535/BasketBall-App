@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,VerifyOTPSerializer,UserChangePasswordSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, EmailValidationSerializer,VerifyOTPSerializer,UserChangePasswordSerializer, ForgetPasswordResetSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
@@ -54,7 +54,17 @@ class UserLoginView(APIView):
                 return Response({"Error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        
+        return Response({"message": "User logged out successfully."}, status=status.HTTP_200_OK)
+
+
 class EmailValidationView(APIView):
+    permission_classes=[IsAuthenticated]
     def post(self, request):
         
         serializer = EmailValidationSerializer(data=request.data)
@@ -69,7 +79,7 @@ class EmailValidationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyOTPView(APIView):
-    
+    permission_classes=[IsAuthenticated]
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
@@ -94,5 +104,12 @@ class UserChangePasswordView(APIView):
         serializer.is_valid(raise_exception=True)
         return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
 
+class ForgetPasswordResetView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, format=None):
+        serializer = ForgetPasswordResetSerializer(data=request.data, context={'user': request.user})
+        if serializer.is_valid(raise_exception=True):
+        
+            return Response({"message": "Password Change Successfully."}, status=status.HTTP_200_OK)
 
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

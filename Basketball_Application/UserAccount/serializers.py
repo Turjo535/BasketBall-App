@@ -83,7 +83,7 @@ class EmailValidationSerializer(serializers.Serializer):
             })
         return value
 
-# CHANGED: Added comments and improved OTP secret handling (should be stored/retrieved, not regenerated)
+
 class VerifyOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
@@ -98,9 +98,6 @@ class VerifyOTPSerializer(serializers.Serializer):
             raise serializers.ValidationError("This email is not registered.")
 
         user = User.objects.get(email=email)
-
-        # Retrieve the OTP secret stored for the user (should be set when sending OTP)
-        
         
         if (timezone.now() - user.otp_send_time) > timedelta(minutes=5):
             raise serializers.ValidationError("OTP has expired. Please request a new one.")
@@ -124,11 +121,36 @@ class UserChangePasswordSerializer(serializers.Serializer):
         
         password2 = attrs.get('password2')
         user = self.context.get('user')
-        if not self.context.get('user').check_password(current_password):
+        print("User in context:", user.is_active)
+        if not user.check_password(current_password):
             raise serializers.ValidationError("Current password is incorrect")
+        if not user.is_active:
+            raise serializers.ValidationError("User account is not active. Please verify your email first.")
         elif password != password2:
             raise serializers.ValidationError("Password and Confirm Password doesn't match")
         user.set_password(password)
         user.save()
         return attrs   
+class ForgetPasswordResetSerializer(serializers.Serializer):
+    
+    new_password = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
+    new_password2 = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
 
+    class Meta:
+        fields = ['new_password', 'new_password2']
+
+    def validate(self, attrs):
+        
+        new_password = attrs.get('new_password')
+        new_password2 = attrs.get('new_password2')
+        user = self.context.get('user')
+        
+        if new_password != new_password2:
+            raise serializers.ValidationError("New password and confirm password do not match.")
+
+        if not user.is_active:
+            raise serializers.ValidationError("User account is not active. Please verify your email first.")
+        
+        user.set_password(new_password)
+        user.save()
+        return attrs
