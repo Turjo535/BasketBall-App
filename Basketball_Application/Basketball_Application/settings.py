@@ -25,7 +25,6 @@ SECRET_KEY = 'django-insecure-_s+#^)b3c!l=a*!tmw7h5bkr5_f4lf@o99z+jz-_5s&wlez0at
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'UserAccount.User'
@@ -42,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework',
     'UserAccount',
+    'Players',
     
 ]
 
@@ -60,7 +60,7 @@ ROOT_URLCONF = 'Basketball_Application.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,7 +121,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

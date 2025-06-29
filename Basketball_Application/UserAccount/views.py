@@ -35,7 +35,9 @@ class UserRegistrationView(APIView):
 
 
 class UserLoginView(APIView):
+    
     def post(self, request, format=None):
+        
         serializers = UserLoginSerializer(data=request.data)
         #print(serializers.data.get('email'))
         if serializers.is_valid(raise_exception=True):
@@ -64,7 +66,7 @@ class LogoutView(APIView):
 
 
 class EmailValidationView(APIView):
-    permission_classes=[IsAuthenticated]
+    
     def post(self, request):
         
         serializer = EmailValidationSerializer(data=request.data)
@@ -79,7 +81,7 @@ class EmailValidationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyOTPView(APIView):
-    permission_classes=[IsAuthenticated]
+    
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
@@ -105,7 +107,7 @@ class UserChangePasswordView(APIView):
         return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
 
 class ForgetPasswordResetView(APIView):
-    permission_classes = [IsAuthenticated]
+    
     def post(self, request, format=None):
         serializer = ForgetPasswordResetSerializer(data=request.data, context={'user': request.user})
         if serializer.is_valid(raise_exception=True):
